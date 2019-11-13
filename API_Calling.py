@@ -1,10 +1,17 @@
+import math
 from github import Github
 
-# First create a Github instance:
+g = Github("4e5ff86857cf7f1cda72cf7fab4fe988115df46b")
+avgPy = 0
+num = 0
+isDone = 0
+repositories = g.search_repositories(query='language:python')
+for repo in repositories:
+ avgPy = avgPy + repo.stargazers_count
+ num = num+1
+ print(num, " = ", repo.stargazers_count)
+ if num > 100 :
+  break
 
-# using username and password
-g = Github("flynnm20", "******")
-
-# Then play with your Github objects:
-for repo in g.get_user().get_repos():
-    print(repo.name)
+avgPy = avgPy/num
+print(math.ceil(avgPy))
