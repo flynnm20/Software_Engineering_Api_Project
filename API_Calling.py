@@ -1,7 +1,7 @@
 import math
 from github import Github
 
-g = Github("4e5ff86857cf7f1cda72cf7fab4fe988115df46b")
+g = Github("")
 avgPy = 0
 num = 0
 isDone = 0
