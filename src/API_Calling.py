@@ -33,7 +33,7 @@ def get_avg_of_repo(repositories):
 
 
 # access token for github
-g = Github("0fc78182ed7267d879b1074064e549d57eefdaed")
+g = Github("GITHUB_ACCESS_TOKEN")
 
 google = g.get_organization("Facebook")
 members = google.get_members()
