@@ -4,10 +4,15 @@ import plotly.express as px
 import math
 import json
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from matplotlib.figure import Figure
 import numpy as np
 from enum import unique
-import pandas
+from io import StringIO
+from flask import Response
+import pandas as pd
 
+#get the amount of languages from the repos
 def getRepoLanguagesCount(repos):
     retLang = []
     num = 0
@@ -21,6 +26,7 @@ def getRepoLanguagesCount(repos):
     return num
 
 
+# get the avg star of a users repos
 def get_avg_of_repo(repositories):
     num = 0
     avg = 0
@@ -29,36 +35,51 @@ def get_avg_of_repo(repositories):
             break
         avg = avg + repo.stargazers_count
         num = num + 1
-    return avg
+    return (avg/num)
 
 
+#
+def getimage(orgStr):
+ area = (30 * np.random.rand(50)) ** 2  # 0 to 15 point radii
+ print("Dataset generated")
+ fig = plt.figure()
+ plt.scatter(avg_Str,nm_Lng, figure = fig)
+ return fig
+
+
+def createPandasTable():
+ listOfOrgs = ["Apple","Google","Facebook","amzn",]
+ avg_Str = []
+ nm_Lng = []
+ orgForRef = []
+ for orgStr in listOfOrgs:
+     org = g.get_organization(orgStr)
+     members = org.get_members()
+     num = 0
+     # get avg stars and lang used for each member of an organization up to a set limit
+     for mem in members:
+         repos = mem.get_repos()
+         avgStars = get_avg_of_repo(repos)
+         langKnown = getRepoLanguagesCount(repos)
+         avg_Str.append(avgStars)
+         nm_Lng.append(langKnown)
+         orgForRef.append(orgStr)
+         num = num + 1
+         if num >= 30:
+             break
+     print(orgStr)
+ df1 = pd.DataFrame({'org': orgForRef, 'avg_Star': avg_Str, 'num_Lang': nm_Lng})
+ return df1
+
+#Main
 # access token for github
-g = Github("GITHUB_ACCESS_TOKEN")
-
-google = g.get_organization("Facebook")
-members = google.get_members()
-num = 0
-avg_Str = []
-nm_Lng = []
-for mem in members:
-    repos = mem.get_repos()
-    avgStars = get_avg_of_repo(repos)
-    langKnown = getRepoLanguagesCount(repos)
-    avg_Str.append(avgStars)
-    nm_Lng.append(langKnown)
-    print("Gotone")
-    num = num+1
-    if num >= 10:
-        break
-
-print("Out of loop")
-
-N = 50
-x=avg_Str
-y=nm_Lng
-colors = 100
-area = (30 * np.random.rand(N))**2  # 0 to 15 point radii
-print("Dataset generated")
-
-plt.scatter(x,y)
-plt.show()
+g = Github("edb0efbc1665d703212a3ee8e95ecf7cc5e05a07")
+DataTable = createPandasTable()
+print(DataTable)
+data = DataTable.to_json(orient='columns')
+print(data)
+with open('data.json', 'w') as outfile:
+    json.dump(data, outfile)
+#GoogImage = getimage("Google")
+#FBImage = getimage("Facebook")
+#plt.show()
