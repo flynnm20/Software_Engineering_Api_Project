@@ -1,9 +1,9 @@
 import peewee
 from github import Github
-import plotly.express as px
 import math
 import json
 import matplotlib.pyplot as plt
+import operator
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
 import numpy as np
@@ -12,18 +12,55 @@ from io import StringIO
 from flask import Response
 import pandas as pd
 
-#get the amount of languages from the repos
+#create a strongest language view where we get the most popular language and compare the repos that their in.
+# create a bar chart with ORG/Language at the base and hight being the avg repos
+
+def appToData(tmpLangData, langData):
+    for l in tmpLangData:
+        if l not in langData:  # if doesn't exist then add key and val.
+            langData[l] = tmpLangData[l]
+        else:  # else add the new val to old val
+            langData[l] = langData[l] + tmpLangData[l]
+    return langData
+
+class Org:
+    def __init__(self, name):
+        self.name = name
+        self.langData = {}
+        self.members = []
+        self.fig = None
+        self.mostUsedLang = None
+        self.mostUsedLangStar = 0
+        self.AvgSList = []
+        self.LnKnList = []
+        self.org = g.get_organization(self.name)
+        self.membersList = self.org.get_members()
+        self.num = 0
+        # get avg stars and lang used for each member of an organization up to a set limit
+        df = pd.DataFrame
+        for m in self.membersList:
+            repos = m.get_repos()
+            tmpLangData = getRepoLanguagesCount(repos)
+            self.langData = appToData(tmpLangData, self.langData)
+            self.langKnown = len(tmpLangData)
+            self.AvgSList.append(get_avg_of_repo(repos))
+            self.LnKnList.append(self.langKnown)
+            self.num = self.num + 1
+            if self.num >= 20:
+                break
+        self.mostUsedLang = max(self.langData, key=self.langData.get)
+
 def getRepoLanguagesCount(repos):
-    retLang = []
+    retLang = {} # dict of all lang listed and the stars associated with that language
     num = 0
     for r in repos:
         lang = r.get_languages()
         for l in lang:
-            if l not in retLang:
-                retLang.append(l)
-    for n in retLang:
-        num = num + 1
-    return num
+            if l not in retLang: # if doesn't exist then add key and val.
+                retLang[l] = r.stargazers_count
+            else: # else add the new val to old val
+                retLang[l] = retLang[l] + r.stargazers_count
+    return retLang
 
 
 # get the avg star of a users repos
@@ -35,51 +72,41 @@ def get_avg_of_repo(repositories):
             break
         avg = avg + repo.stargazers_count
         num = num + 1
+    if num == 0:
+        num = 1
     return (avg/num)
 
 
-#
-def getimage(orgStr):
- area = (30 * np.random.rand(50)) ** 2  # 0 to 15 point radii
- print("Dataset generated")
- fig = plt.figure()
- plt.scatter(avg_Str,nm_Lng, figure = fig)
- return fig
 
 
-def createPandasTable():
- listOfOrgs = ["Apple","Google","Facebook","amzn",]
- avg_Str = []
- nm_Lng = []
- orgForRef = []
- for orgStr in listOfOrgs:
-     org = g.get_organization(orgStr)
-     members = org.get_members()
-     num = 0
-     # get avg stars and lang used for each member of an organization up to a set limit
-     for mem in members:
-         repos = mem.get_repos()
-         avgStars = get_avg_of_repo(repos)
-         langKnown = getRepoLanguagesCount(repos)
-         avg_Str.append(avgStars)
-         nm_Lng.append(langKnown)
-         orgForRef.append(orgStr)
-         num = num + 1
-         if num >= 30:
-             break
-     print(orgStr)
- df1 = pd.DataFrame({'org': orgForRef, 'avg_Star': avg_Str, 'num_Lang': nm_Lng})
- return df1
 
 #Main
 # access token for github
-g = Github("edb0efbc1665d703212a3ee8e95ecf7cc5e05a07")
-DataTable = createPandasTable()
-print(DataTable)
-data = DataTable.to_json(orient='columns')
-print(data)
-with open('data.json', 'w') as outfile:
-    json.dump(data, outfile)
-#GoogImage = getimage("Google")
-#FBImage = getimage("Facebook")
-#plt.show()
+g = Github("ACCESS_TOKEN")
+listOfOrgs = ["Facebook", "amzn", "Apple", "Google", "IBM"]
+most_used_lang = []
+most_used_lang_vals = []
+fig = plt.figure()
+n = 0
+colours = ["b", "g", "r", "c", "y"]
+plt.figure(1)
+for i in listOfOrgs:
+    tmpOrg = Org(i)
+    strings = [tmpOrg.mostUsedLang,'/',tmpOrg.name]
+    barLabel = ''.join(strings)
+    most_used_lang.append(barLabel)
+    most_used_lang_vals.append(tmpOrg.langData[tmpOrg.mostUsedLang])
+    plt.scatter(tmpOrg.AvgSList, tmpOrg.LnKnList, c=colours[n], s=30, label=tmpOrg.name)
+    n = n+1
+plt.title('Company members; Languages Used vs Average Stars per repository')
+plt.ylabel("Number of lang known")
+plt.xlabel("Average Stars per repository")
+plt.legend(loc=2)
+plt.savefig('scatter.png')
+
+plt.figure(2)
+plt.barh(most_used_lang, most_used_lang_vals, align='center')
+plt.yticks(most_used_lang, most_used_lang)
+plt.xlabel("Stars across company's repositories")
+plt.title("Best Language used by each company by star rating")
+plt.savefig('barchart.png')
