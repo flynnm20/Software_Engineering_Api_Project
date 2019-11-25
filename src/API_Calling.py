@@ -86,7 +86,7 @@ def get_avg_of_repo(repositories):
 
 #Main
 # access token for github
-g = Github("edb0efbc1665d703212a3ee8e95ecf7cc5e05a07")
+g = Github("AccessToken")
 listOfOrgs = ["Facebook", "amzn", "Apple", "Google", "IBM"]
 most_used_lang = []
 most_used_lang_vals = []
