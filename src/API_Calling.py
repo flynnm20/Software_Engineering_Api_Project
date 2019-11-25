@@ -1,8 +1,12 @@
+import time
 import peewee
 from github import Github
 import math
 import json
 import matplotlib.pyplot as plt
+from plotly.offline import plot
+import plotly.express as px
+from plotly.subplots import make_subplots
 import operator
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
@@ -46,7 +50,7 @@ class Org:
             self.AvgSList.append(get_avg_of_repo(repos))
             self.LnKnList.append(self.langKnown)
             self.num = self.num + 1
-            if self.num >= 20:
+            if self.num >= 1:
                 break
         self.mostUsedLang = max(self.langData, key=self.langData.get)
 
@@ -82,7 +86,7 @@ def get_avg_of_repo(repositories):
 
 #Main
 # access token for github
-g = Github("ACCESS_TOKEN")
+g = Github("edb0efbc1665d703212a3ee8e95ecf7cc5e05a07")
 listOfOrgs = ["Facebook", "amzn", "Apple", "Google", "IBM"]
 most_used_lang = []
 most_used_lang_vals = []
@@ -90,23 +94,29 @@ fig = plt.figure()
 n = 0
 colours = ["b", "g", "r", "c", "y"]
 plt.figure(1)
+aS= []
+lK = []
+index = []
 for i in listOfOrgs:
     tmpOrg = Org(i)
     strings = [tmpOrg.mostUsedLang,'/',tmpOrg.name]
     barLabel = ''.join(strings)
     most_used_lang.append(barLabel)
     most_used_lang_vals.append(tmpOrg.langData[tmpOrg.mostUsedLang])
-    plt.scatter(tmpOrg.AvgSList, tmpOrg.LnKnList, c=colours[n], s=30, label=tmpOrg.name)
+    for h in  tmpOrg.AvgSList:
+        index.append(i)
+    for a in tmpOrg.AvgSList:
+        aS.append(a)
+    for b in tmpOrg.LnKnList:
+        lK.append(b)
     n = n+1
-plt.title('Company members; Languages Used vs Average Stars per repository')
-plt.ylabel("Number of lang known")
-plt.xlabel("Average Stars per repository")
-plt.legend(loc=2)
-plt.savefig('scatter.png')
 
-plt.figure(2)
-plt.barh(most_used_lang, most_used_lang_vals, align='center')
-plt.yticks(most_used_lang, most_used_lang)
-plt.xlabel("Stars across company's repositories")
-plt.title("Best Language used by each company by star rating")
-plt.savefig('barchart.png')
+scatData = pd.DataFrame({"Org":index, "Average Stars": aS, "Languages Known":lK})
+barData = pd.DataFrame({"Org":listOfOrgs,"UsedLang":most_used_lang, "Vals":most_used_lang_vals})
+
+
+fig = px.scatter(scatData,x="Average Stars",y = "Languages Known", color="Org")
+plot(fig)
+time.sleep(30)
+figBar = px.bar(barData, x = "UsedLang", y = "Vals", color="Org")
+plot(figBar)
