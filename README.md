@@ -15,3 +15,15 @@ Once all the data has been gathered and parsed G1 and G2 are generated. Using th
 
 Result:
 
+Scatter Graph
+![](https://github.com/flynnm20/Software_Engineering_Api_Project/blob/master/Software_Engineering_Scatter_Graph.PNG)
+
+Demo of Hovering functionalty on scatter graph
+![](https://github.com/flynnm20/Software_Engineering_Api_Project/blob/master/label_Scatter.PNG)
+
+Bar Graph:
+![](https://github.com/flynnm20/Software_Engineering_Api_Project/blob/master/seBarChart.PNG)
+
+Demo of hovering on bar chart:
+![](https://github.com/flynnm20/Software_Engineering_Api_Project/blob/master/label_bar.PNG)
+
